@@ -1,29 +1,72 @@
 <template>
-  <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js + TypeScript App"/>
-  </div>
+    <v-app id="app" class="fill-y">
+        <v-app-bar 
+            app 
+            dark 
+            color="primary" 
+            class="d-flex"
+            clipped-left
+        >
+            <v-img 
+                height="100%"
+                width="64px"
+                contain
+                src="plant-sim-logo.png"
+            />
+
+            <Terminal class="flex-grow-1"/>
+        </v-app-bar>
+
+        <v-navigation-drawer app permanent clipped>
+            <v-list>
+                <v-list-item to="/">Home</v-list-item>
+
+                <v-list-item to="/shop">Shop</v-list-item>
+
+                <v-list-item to="/inventory">Inventory</v-list-item>
+            </v-list>
+        </v-navigation-drawer>
+
+        <v-main class="fill-y">
+            <router-view class="fill-y" />
+        </v-main>
+    </v-app>
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-property-decorator'
-import HelloWorld from './components/HelloWorld.vue'
+import Vue from 'vue';
+import Terminal from '@/components/Terminal.vue';
 
-@Component({
-  components: {
-    HelloWorld
-  }
+export default Vue.extend({
+    components: {
+        Terminal,
+    },
 })
-export default class App extends Vue {}
 </script>
 
-<style>
+<style lang="scss">
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+    font-family: Avenir, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-align: center;
+    color: #2c3e50;
+}
+
+#nav {
+    padding: 30px;
+
+    a {
+        font-weight: bold;
+        color: #2c3e50;
+
+        &.router-link-exact-active {
+            color: #42b983;
+        }
+    }
+}
+
+.fill-y {
+    height: 100%;
 }
 </style>
