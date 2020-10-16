@@ -11,6 +11,7 @@ const pack: ResourcePackConfig = {
             "duration": "耐久",
             "temperature": "温度",
             "price": "单价",
+            "deploy": "部署",
         },
         name: {
             "inertial_dust": "惰性粉尘",

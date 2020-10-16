@@ -6,6 +6,8 @@ import UnitProto from './UnitProto';
 type Uid = number;
 type Id = string;
 
+type UidMap<T> = { [uid: number]: T}
+
 interface UnitCtorData {
     heat: number;
     mass: number;
@@ -35,11 +37,20 @@ interface UnitData {
     [prop: string]: any;
 }
 
-interface DeployAction {
+interface ReactorData {
     uid: Uid;
-    ruid: Uid;
-    tx: number;
-    ty: number;
+    name: string;
+    width: number;
+    height: number;
+    power: number;
+    powerRate: number;
+    slots: UnitData[];
+    heatmap?: number[][];
+}
+
+interface DeployScheme {
+    reactorUid: Uid;
+    slots: Array<number>;
 }
 
 interface ResultReport {
@@ -49,10 +60,14 @@ interface ResultReport {
 
 interface GameInterface {
     getShopItemList(): ShopItem[];
+    getReactorList(): ReactorData[];
     getInventory(): UnitData[];
 
     purchase(cart: PurchasementItem[]): boolean[];
-    deploy(actions: DeployAction[]): ResultReport;
+    deploy(scheme: DeployScheme): ResultReport;
+
+    online(): void;
+    offline(): void;
 
     _execute(line: string): any;
 }
@@ -64,12 +79,14 @@ export {
     UnitProto,
 
     UnitData,
+    ReactorData,
     UnitCtorData,
 
     Uid,
+    UidMap,
     ShopItem,
     PurchasementItem,
-    DeployAction,
+    DeployScheme,
     ResultReport,
     GameInterface,
 }

@@ -1,6 +1,6 @@
 import { genUid } from '@/utils/number';
-import { Uid } from './interfaces';
-import { Vector } from './types'
+import { ReactorData, Uid } from './interfaces';
+import { Identifible, Vector } from './types'
 import Unit from './Unit';
 
 const defaultInertialDustParams = {
@@ -9,18 +9,28 @@ const defaultInertialDustParams = {
     duration: 1,
 };
 
-export default class Reactor {
-    uid: Uid;
+interface ReactorCtorParams {
+  width: number;
+  height: number;
+  uid?: Uid;
+  name?: string;
+  wallTemparature: number;
+}
+
+export default class Reactor extends Identifible {
+    name: string;
     width: number;
     height: number;
     wallTemparature: number;
     slots: Unit[];
     power = 0;
+    powerRate = 0;
 
     bufferedHeatMap: number[][];
 
-    constructor (width: number, height: number, wallTemparature: number) {
-      this.uid = genUid();
+    constructor ({ width, height, wallTemparature, uid, name }: ReactorCtorParams) {
+      super(uid);
+      this.name = name || 'Reactor-' + this.uid;
       this.width = width;
       this.height = height;
       this.wallTemparature = wallTemparature;
@@ -28,11 +38,11 @@ export default class Reactor {
       this.bufferedHeatMap = this.makeBufferedHeatmap();
     }
 
-    private indexOf (x: number, y: number): number {
+    public indexOf (x: number, y: number): number {
       return (x >= 0 && x < this.width && y >= 0 && y < this.height) ? y * this.width + x : -1;
     }
 
-    private posOf (index: number): Vector {
+    public posOf (index: number): Vector {
       return (index >= 0 && index < this.slots.length) ? {
         x: index % this.width,
         y: Math.floor(index / this.width),
@@ -74,6 +84,7 @@ export default class Reactor {
     }
 
     tick () {
+      const prevPower = this.power;
       this.slots.forEach((unit, index) => {
         if (unit) {
           unit.proto.tick(unit, this.posOf(index), this);
@@ -82,6 +93,7 @@ export default class Reactor {
       this.bufferedHeatMap = this.makeBufferedHeatmap();
       this.heatFlow();
       this.bufferedHeatMap = this.makeBufferedHeatmap();
+      this.powerRate = this.power - prevPower;
       // console.log('tick')
     }
 
@@ -111,5 +123,18 @@ export default class Reactor {
 
     produce (power: number) {
       this.power += power;
+    }
+
+    getData(): ReactorData {
+      return {
+        uid: this.uid,
+        name: this.name,
+        width: this.width,
+        height: this.height,
+        power: this.power,
+        powerRate: this.powerRate,
+        slots: this.slots.map(u => u.getData()),
+        heatmap: this.bufferedHeatMap,
+      };
     }
 }

@@ -18,7 +18,7 @@ export default function initialize () {
     energyRatio: 0.35,
     workingThreshold: 1e4,
     damagingThreshold: 1.2e4,
-    damageScale: 8e4,
+    damageScale: 8e3,
   }));
 
   Res.register(pack);

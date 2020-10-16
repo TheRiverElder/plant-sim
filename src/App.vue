@@ -19,11 +19,11 @@
 
         <v-navigation-drawer app permanent clipped>
             <v-list>
-                <v-list-item to="/">Home</v-list-item>
-
-                <v-list-item to="/shop">Shop</v-list-item>
-
-                <v-list-item to="/inventory">Inventory</v-list-item>
+                <v-list-item
+                    v-for="route of routes"
+                    :key="route.path"
+                    :to="route.path"
+                >{{ route.name }}</v-list-item>
             </v-list>
         </v-navigation-drawer>
 
@@ -36,11 +36,22 @@
 <script lang="ts">
 import Vue from 'vue';
 import Terminal from '@/components/Terminal.vue';
+import { routes } from '@/router'
 
 export default Vue.extend({
     components: {
         Terminal,
     },
+
+    data() {
+        return {
+            routes: routes,
+        };
+    },
+
+    created() {
+        this.$store.dispatch('initialize');
+    }
 })
 </script>
 
@@ -66,7 +77,27 @@ export default Vue.extend({
     }
 }
 
+html, body, #app {
+    width: 100%;
+    height: 100%;
+}
+
+.fill {
+    width: 100%;
+    height: 100%;
+}
+
 .fill-y {
     height: 100%;
+}
+
+.center-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.overflow-auto {
+    overflow: auto;
 }
 </style>

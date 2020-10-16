@@ -1,17 +1,15 @@
-import Reactor from '@/game/Reactor';
-import Unit from '@/game/Unit';
 import { ActionContext } from 'vuex';
 import { PlantSimState } from './state';
 import initializeGameBuildin from '../game/buildin/index';
+import game from '@/game/game';
 
 function initialize({ state, dispatch }: ActionContext<PlantSimState, PlantSimState>) {
     initializeGameBuildin();
     Object.assign(state, {
-        shop: Unit.getAllPrototypes().map(p => p.id),
-        warehouse: [],
-        reactor: new Reactor(9, 7, 300),
         pid: null,
     });
+
+    game.online();
     
     dispatch('startCycle');
 }

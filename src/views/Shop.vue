@@ -106,6 +106,7 @@ export default Vue.extend({
                     }
                 }
                 game.purchase(cart);
+                this.$router.push('/inventory');
             }
         },
     },

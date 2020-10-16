@@ -16,15 +16,18 @@ class Res {
         Res.packs[pack.name] = pack.data;
     }
 
-    static get(...keys: string[]) {
-        keys = keys.map(s => s.split('.')).flat();
+    static get(...keys: Array<string | null>): string {
+        const nks = keys.map(s => s?.split('.') || []).flat();
+        if (nks.every(e => !e.length)) {
+            return '';
+        }
         let namespace = Res.packs[Res.current];
         let index = 0;
-        while (!!namespace && typeof namespace === 'object' && index < keys.length) {
-            namespace = namespace[keys[index]];
+        while (!!namespace && typeof namespace === 'object' && index < nks.length) {
+            namespace = namespace[nks[index]];
             index++;
         }
-        return typeof namespace === 'string' ? namespace : keys.join('.');
+        return typeof namespace === 'string' ? namespace : nks.join('.');
     }
 }
 

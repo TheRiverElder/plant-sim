@@ -3,6 +3,8 @@ import VueRouter, { RouteConfig } from 'vue-router';
 import Home from '../views/Home.vue';
 import Shop from '../views/Shop.vue';
 import Inventory from '../views/Inventory.vue';
+import Deployer from '../views/Deployer.vue';
+import ReactorMonitor from '../views/ReactorMonitor.vue';
 
 Vue.use(VueRouter);
 
@@ -22,6 +24,16 @@ const routes: Array<RouteConfig> = [
     name: 'Inventory',
     component: Inventory,
   },
+  {
+    path: '/deployer',
+    name: 'Deployer',
+    component: Deployer,
+  },
+  {
+    path: '/reactor-monitor',
+    name: 'ReactorMonitor',
+    component: ReactorMonitor,
+  },
 ];
 
 const router = new VueRouter({
@@ -29,3 +41,7 @@ const router = new VueRouter({
 });
 
 export default router;
+
+export {
+  routes
+}
