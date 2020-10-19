@@ -15,7 +15,12 @@ function toEconomic(num: number, symbol = 'C.') {
     return symbol + arr.reverse().filter(s => s.length).join(',');
 }
 
+function rand(min = 0, max = 100) {
+    return Math.floor(min + Math.random() * (max - min));
+}
+
 export {
     genUid,
     toEconomic,
+    rand,
 }

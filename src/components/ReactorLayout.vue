@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div ref="layout">
         <div v-for="y of height" :key="y" class="d-flex">
             <span
                 v-for="x of width"
@@ -8,9 +8,9 @@
                 @click="$emit('click', posOf(x, y), $event)"
                 @mouseup="$emit('mouseup', posOf(x, y), $event)"
             >
-                <v-img
-                    :width="cellWidth"
-                    :height="cellWidth"
+                <img
+                    :width="actualCellWidth"
+                    :height="actualCellWidth"
                     :src="iconAt(x - 1, y - 1)"
                 />
             </span>
@@ -30,8 +30,14 @@ export default Vue.extend({
         slots: Array,
         cellWidth: {
             type: Number,
-            default: 32,
+            default: 0,
         },
+    },
+
+    data() {
+        return {
+            actualCellWidth: this.cellWidth,
+        };
     },
 
     methods: {
@@ -45,6 +51,14 @@ export default Vue.extend({
         iconAt(x: number, y: number) {
             return iconOf((this.slots[this.width * y + x] as UnitData)?.protoId || "inertial_dust");
         },
+
+        resizeCellWidth() {
+            this.actualCellWidth = (this.$el as HTMLDivElement).clientWidth / this.width;
+        },
+    },
+
+    mounted() {
+        this.resizeCellWidth();
     },
 });
 </script>
@@ -53,7 +67,7 @@ export default Vue.extend({
 .cell:hover {
     /* border: 0.1em solid #66ccff; */
     /* filter: brightness(0.5); */
-    filter: invert(100%)
+    filter: invert(30%);
 }
 /* .cell::after {
     content: "";

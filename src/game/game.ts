@@ -1,6 +1,7 @@
 import { genUid } from '@/utils/number';
+import { genName } from '@/utils/strings';
 import initialize from './buildin';
-import { DeployScheme, GameInterface, PurchasementItem, Reactor, ReactorData, ResultReport, ShopItem, Uid, UidMap, Unit, UnitData } from './interfaces';
+import { DeployScheme, GameInterface, Profile, PurchasementItem, Reactor, ReactorData, ResultReport, ShopItem, Uid, UidMap, Unit, UnitData } from './interfaces';
 
 interface DataType {
     reactors: Reactor[];
@@ -8,6 +9,8 @@ interface DataType {
     shop: ShopItem[];
     period: number;
     lastModified: number;
+    ownerName: string;
+    account: number;
 }
 
 function initializeData(): DataType {
@@ -18,7 +21,7 @@ function initializeData(): DataType {
                 width: 9,
                 height: 7,
                 wallTemparature: 300,
-                name: String.fromCharCode(...Array(2 + Math.floor(Math.random() * 5)).fill('a').map((_, i) => (i ? 'a' : 'A').charCodeAt(0) + Math.floor(Math.random() * 26)))
+                name: genName(),
             }),
         ],
         inventory: [],
@@ -56,8 +59,14 @@ function initializeData(): DataType {
         ],
         period: 1000,
         lastModified: Date.now(),
+        ownerName: genName(),
+        account: 5e5,
     };
 }
+
+// function save(): void {
+//     localStorage.setItem('plant-sim-data', JSON.stringify(data));
+// }
 
 const data: DataType = initializeData();
 
@@ -67,6 +76,12 @@ const COMMANDS: {[head: string]: (params: string[], game: GameInterface) => any}
         game.purchase(cart);
     },
 };
+
+function tick() {
+    data.reactors.forEach(r => r.tick());
+    data.account += Math.floor(data.reactors.reduce((s, r) => s + r.power, 0));
+    data.lastModified += data.period;
+}
 
 let pid = -1;
 
@@ -83,23 +98,37 @@ const localGameInterface: GameInterface = {
         return data.inventory.map(u => u.getData());
     },
 
-    purchase(cart: PurchasementItem[]): boolean[] {
-        const result: boolean[] = Array(cart.length).fill(false);
-
-        let index = 0;
-        for (const { uid, count } of cart) {
+    purchase(cart: PurchasementItem[]): ResultReport {
+        const cache: Array<Unit> = [];
+        const errors = [];
+        let sum = 0;
+        for (let i = 0; i < cart.length && sum <= data.account; i++) {
+            const { uid, count } = cart[i];
             const item = data.shop.find(i => i.uid === uid);
-            result[index] = !!item;
             if (item) {
                 for (let i = 0; i < count; i++) {
                     const unit = Unit.of(item.protoId, item.ctorParams);
-                    data.inventory.push(unit);
+                    cache.push(unit);
                 }
+                sum += item.price * count;
+            } else {
+                errors.push(uid);
             }
-            index++;
         }
 
-        return result;
+        if (errors.length || sum > data.account) {
+            return {
+                success: false,
+                errors: [
+                    errors.length ? 'Cannot find item(s): ' + errors.join(', ') : '',
+                    sum > data.account ? `Not enough money: C.${sum}/C.${data.account}` : '',
+                ].filter(s => s.length)
+            };
+        } else {
+            cache.forEach(u => data.inventory.push(u));
+            data.account -= sum;
+            return { success: true };
+        }
     },
 
     deploy(scheme: DeployScheme): ResultReport {
@@ -165,14 +194,13 @@ const localGameInterface: GameInterface = {
     online(): void {
         const onlineTime = Date.now();
         while (onlineTime - data.lastModified >= data.period) {
-            data.reactors.forEach(r => r.tick());
-            data.lastModified += data.period;
+            tick();
         }
 
         if (pid < 0) {
             pid = setInterval(() => {
                 const now = Date.now();
-                data.reactors.forEach(r => r.tick());
+                tick();
                 data.lastModified = now;
             }, data.period);
         }
@@ -191,7 +219,15 @@ const localGameInterface: GameInterface = {
         if (command) {
             command(params, this);
         }
-    }
+    },
+
+    getProfile(): Profile {
+        return {
+            name: data.ownerName,
+            reactorCount: data.reactors.length,
+            account: data.account,
+        };
+    },
 };
 
 const game = localGameInterface;

@@ -1,52 +1,52 @@
 <template>
     <div
         ref="deployer"
-        class="fill d-flex"
+        class="fill px-2 overflow-hidden d-flex flex-column"
         @mousemove="mouseMoveHandler"
         @mouseup="unhold"
         @mouseleave="unhold"
     >
-        <v-container class="fill-y d-flex flex-column left pl-5 pt-2">
-            <v-row class="flex-grow-0">
-                <v-col cols="4">
-                    <v-select
-                        label="Reactor"
-                        :items="reactorList"
-                        item-text="name"
-                        item-value="uid"
-                        :disabled="!!currentReactor"
-                        v-model="currentReactorUid"
-                    />
-                </v-col>
+        <div class="flex-grow-0 d-flex align-center">
+            <v-select
+                class="flex-grow-1 flex-shrink-1"
+                label="Reactor"
+                :items="reactorList"
+                item-text="name"
+                item-value="uid"
+                :disabled="!!currentReactor"
+                v-model="currentReactorUid"
+                dense
+                hide-details
+            />
 
-                <v-spacer/>
-
-                <v-col cols="4">
-                    <v-checkbox
-                        label="Removal"
-                        v-model="removal"
-                    />
-                </v-col>
-            </v-row>
-
-            <div v-if="currentReactor" class="center-container flex-grow-1">
-                <ReactorLayout
-                    :width="currentReactor.width"
-                    :height="currentReactor.height"
-                    :slots="previewSlots"
-                    :items-map="itemsMap"
-                    :cell-width="64"
-                    @mouseup="replace"
-                />
-            </div>
+            <v-checkbox
+                class="mx-5"
+                label="Removal"
+                v-model="removal"
+                dense
+                hide-details
+            />
 
             <v-btn @click="deploy">
-                {{ textOf("deploy") }}
-                <v-icon>mdi-right-arrow</v-icon>
-            </v-btn>
-        </v-container>
+                <span v-text="textOf('deploy')" />
 
-        <v-container class="right fill-y overflow-auto">
+                <v-icon>mdi-to-arrow</v-icon>
+            </v-btn>
+        </div>
+
+        <ReactorLayout
+            v-if="currentReactor"
+            :width="currentReactor.width"
+            :height="currentReactor.height"
+            :slots="previewSlots"
+            :items-map="itemsMap"
+            @mouseup="replace"
+            @click="replace"
+        />
+
+        <v-divider/>
+
+        <div class="flex-grow-1 overflow-auto">
             <UnitInfo
                 v-for="item of inventory"
                 :key="item.uid"
@@ -55,10 +55,11 @@
                 :dense="true"
                 :disabled="occupyCounters[item.uid] > 0"
                 @mousedown="hold"
+                @click="hold"
             />
-        </v-container>
+        </div>
 
-        <v-img
+        <img
             v-if="holding >= 0"
             ref="holding"
             class="holding"
@@ -73,12 +74,7 @@
 <script lang="ts">
 import { Vue } from "vue-property-decorator";
 import game from "@/game/game";
-import {
-    Uid,
-    UnitData,
-    ReactorData, 
-    UidMap,
-} from "@/game/interfaces";
+import { Uid, UnitData, ReactorData, UidMap } from "@/game/interfaces";
 import UnitInfo from "@/components/UnitInfo.vue";
 import ReactorLayout from "@/components/ReactorLayout.vue";
 import { iconOf, nameOf, textOf } from "@/utils/resources";
@@ -104,7 +100,7 @@ interface DeployerComputed {
 interface DeployerMethods {
     nameOf(id: string): string;
     textOf(id: string): string;
-    iconOf(protoId: string): string ;
+    iconOf(protoId: string): string;
     unhold(): void;
     hold(uid: Uid, event: MouseEvent): void;
     deploy(): void;
@@ -140,7 +136,9 @@ export default Vue.extend<DeployerData, DeployerMethods, DeployerComputed, {}>({
             this.currentReactor = reactor;
             if (reactor) {
                 this.preview = reactor.slots.map((u) => u.uid);
-                this.occupyCounters = Object.fromEntries(this.inventory.map(u => [u.uid, 0]));
+                this.occupyCounters = Object.fromEntries(
+                    this.inventory.map((u) => [u.uid, 0])
+                );
             }
         },
     },
@@ -148,8 +146,13 @@ export default Vue.extend<DeployerData, DeployerMethods, DeployerComputed, {}>({
     computed: {
         previewSlots() {
             const reactor = this.currentReactor;
-            return reactor ? this.preview.map((uid: Uid, i: number) => this.itemsMap[uid] || reactor.slots[i]) : [];
-        }
+            return reactor
+                ? this.preview.map(
+                      (uid: Uid, i: number) =>
+                          this.itemsMap[uid] || reactor.slots[i]
+                  )
+                : [];
+        },
     },
 
     methods: {
@@ -176,7 +179,9 @@ export default Vue.extend<DeployerData, DeployerMethods, DeployerComputed, {}>({
             if (!reactor) return;
             const result = game.deploy({
                 reactorUid: this.currentReactorUid,
-                slots: this.preview.map((uid, i) => uid === reactor.slots[i].uid ? -1 : uid),
+                slots: this.preview.map((uid, i) =>
+                    uid === reactor.slots[i].uid ? -1 : uid
+                ),
             });
             if (result.success) {
                 this.$router.push("/reactor-monitor");
@@ -189,9 +194,10 @@ export default Vue.extend<DeployerData, DeployerMethods, DeployerComputed, {}>({
             if (this.holding >= 0) {
                 const h = (this.$refs.holding as Vue)?.$el as HTMLElement;
                 if (h) {
-                    const bounding = (this.$refs.deployer as HTMLDivElement).getBoundingClientRect();
-                    h.style.left = (event.clientX - bounding.left - 32) + "px";
-                    h.style.top = (event.clientY - bounding.top - 32) + "px";
+                    const bounding = (this.$refs
+                        .deployer as HTMLDivElement).getBoundingClientRect();
+                    h.style.left = event.clientX - bounding.left - 32 + "px";
+                    h.style.top = event.clientY - bounding.top - 32 + "px";
                 }
             }
         },

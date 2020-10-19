@@ -2,8 +2,8 @@
     <div>
         <canvas
             ref="canvas"
-            width="800"
-            height="600"
+            :width="totalWidth"
+            :height="totalHeight"
             @click="handleClickCanvas"
         ></canvas>
     </div>
@@ -36,6 +36,14 @@ export default Vue.extend({
         grid: Boolean,
     },
 
+    data() {
+        return {
+            actualCellWidth: this.cellWidth,
+            totalWidth: this.width * this.cellWidth,
+            totalHeight: this.height * this.cellWidth,
+        };
+    },
+
     watch: {
         grid: "paint",
         heatmap: "paint",
@@ -48,7 +56,7 @@ export default Vue.extend({
                 paintHeatmap(
                     this.heatmap as number[][],
                     canvas,
-                    this.cellWidth,
+                    this.actualCellWidth,
                     this.maxValue,
                     this.grid
                 );
@@ -60,13 +68,20 @@ export default Vue.extend({
         },
 
         handleClickCanvas(event: MouseEvent) {
-            const x = Math.floor(event.offsetX / this.cellWidth);
-            const y = Math.floor(event.offsetY / this.cellWidth);
+            const x = Math.floor(event.offsetX / this.actualCellWidth);
+            const y = Math.floor(event.offsetY / this.actualCellWidth);
             this.$emit("click", { x, y });
+        },
+
+        resizeCellWidth() {
+            this.actualCellWidth = (this.$el as HTMLDivElement).clientWidth / this.width;
+            this.totalWidth = this.width * this.actualCellWidth;
+            this.totalHeight = this.height * this.actualCellWidth;
         },
     },
 
     mounted() {
+        this.resizeCellWidth();
         Object.assign(this.$refs.canvas, {
             width: this.cellWidth * this.width,
             height: this.cellWidth * this.height,

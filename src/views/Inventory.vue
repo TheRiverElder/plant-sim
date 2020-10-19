@@ -5,6 +5,7 @@
                 v-for="item of inventory"
                 :key="item.uid"
                 :value="item"
+                :dense="true"
                 class="d-flex py-2 px-5 mt-3"
             />
         </v-container>

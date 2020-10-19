@@ -8,6 +8,12 @@ type Id = string;
 
 type UidMap<T> = { [uid: number]: T}
 
+interface Profile {
+    name: string;
+    reactorCount: number;
+    account: number;
+}
+
 interface UnitCtorData {
     heat: number;
     mass: number;
@@ -62,8 +68,9 @@ interface GameInterface {
     getShopItemList(): ShopItem[];
     getReactorList(): ReactorData[];
     getInventory(): UnitData[];
+    getProfile(): Profile;
 
-    purchase(cart: PurchasementItem[]): boolean[];
+    purchase(cart: PurchasementItem[]): ResultReport;
     deploy(scheme: DeployScheme): ResultReport;
 
     online(): void;
@@ -84,6 +91,7 @@ export {
 
     Uid,
     UidMap,
+    Profile,
     ShopItem,
     PurchasementItem,
     DeployScheme,

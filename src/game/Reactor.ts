@@ -24,7 +24,6 @@ export default class Reactor extends Identifible {
     wallTemparature: number;
     slots: Unit[];
     power = 0;
-    powerRate = 0;
 
     bufferedHeatMap: number[][];
 
@@ -84,7 +83,7 @@ export default class Reactor extends Identifible {
     }
 
     tick () {
-      const prevPower = this.power;
+      this.power = 0;
       this.slots.forEach((unit, index) => {
         if (unit) {
           unit.proto.tick(unit, this.posOf(index), this);
@@ -93,7 +92,6 @@ export default class Reactor extends Identifible {
       this.bufferedHeatMap = this.makeBufferedHeatmap();
       this.heatFlow();
       this.bufferedHeatMap = this.makeBufferedHeatmap();
-      this.powerRate = this.power - prevPower;
       // console.log('tick')
     }
 

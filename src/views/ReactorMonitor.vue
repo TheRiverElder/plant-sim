@@ -1,6 +1,6 @@
 <template>
-    <div class="fill d-flex px-5">
-        <v-container class="info-panel">
+    <div class="px-5">
+        <v-container class="text-left">
             <v-select
                 label="Reactor"
                 :items="reactorList"
@@ -9,41 +9,41 @@
                 v-model="currentReactorUid"
             />
 
-            <p>Listing State</p>
+            <div v-if="reactor">
+                <p>Listing State</p>
 
-            <p>Total Power: {{ reactor.power.toPrecision(2) }} Pu</p>
-
-            <p>PowerRate: {{ reactor.powerRate.toPrecision(4) }} Pu/t</p>
-
-            <div v-if="listeningUnit">
-                <span>Pos: ({{ listeningPos.x }}, {{ listeningPos.y }})</span>
-
-                <UnitInfo :dense="true" :value="listeningUnit"/>
+                <p>New-gen Power: {{ reactor.power.toPrecision(4) }} Pu</p>
             </div>
         </v-container>
 
-        <div class="flex-grow-1 center-container flex-column">
-            <div class="center-container">
-                <ReactorLayout
-                    v-if="reactor"
-                    :width="reactor.width"
-                    :height="reactor.height"
-                    :slots="reactor.slots"
-                    @click="select"
-                />
-            </div>
+        <h3>Reactor Layout</h3>
 
-            <Heatmap
-                ref="heatmap"
-                v-if="reactor"
-                :cell-width="32"
-                :width="reactor.width"
-                :height="reactor.height"
-                :heatmap="reactor.heatmap"
-                :max-value="1e5"
-                :grid="true"
-                @click="select"
-            />
+        <ReactorLayout
+            v-if="reactor"
+            :width="reactor.width"
+            :height="reactor.height"
+            :slots="reactor.slots"
+            @click="select"
+        />
+        
+        <h3>Heatmap</h3>
+
+        <Heatmap
+            ref="heatmap"
+            v-if="reactor"
+            :cell-width="32"
+            :width="reactor.width"
+            :height="reactor.height"
+            :heatmap="reactor.heatmap"
+            :max-value="1e5"
+            :grid="true"
+            @click="select"
+        />
+
+        <div v-if="listeningUnit">
+            <span>Pos: ({{ listeningPos.x }}, {{ listeningPos.y }})</span>
+
+            <UnitInfo :dense="true" :value="listeningUnit"/>
         </div>
     </div>
 </template>

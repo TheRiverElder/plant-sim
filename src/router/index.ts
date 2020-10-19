@@ -8,31 +8,36 @@ import ReactorMonitor from '../views/ReactorMonitor.vue';
 
 Vue.use(VueRouter);
 
-const routes: Array<RouteConfig> = [
-  {
-    path: '/',
-    name: 'Home',
-    component: Home,
-  },
+const routes: Array<RouteConfig & { icon: string }> = [
   {
     path: '/shop',
     name: 'Shop',
     component: Shop,
+    icon: 'mdi-store',
   },
   {
     path: '/inventory',
     name: 'Inventory',
     component: Inventory,
+    icon: 'mdi-database',
+  },
+  {
+    path: '/reactor-monitor',
+    name: 'Monitor',
+    component: ReactorMonitor,
+    icon: 'mdi-monitor',
   },
   {
     path: '/deployer',
     name: 'Deployer',
     component: Deployer,
+    icon: 'mdi-hand',
   },
   {
-    path: '/reactor-monitor',
-    name: 'ReactorMonitor',
-    component: ReactorMonitor,
+    path: '/',
+    name: 'Home',
+    component: Home,
+    icon: 'mdi-home',
   },
 ];
 

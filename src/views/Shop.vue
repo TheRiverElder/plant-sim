@@ -1,46 +1,45 @@
 <template>
-    <div class="fill d-flex flex-column">
-        <v-container class="flex-grow-1">
-            <v-card
+    <div class="overflow-hidden fill d-flex flex-column">
+        <v-container class="overflow-auto flex-grow-1">
+            <v-row
+                class="px-2"
                 v-for="(item, index) of items"
                 :key="item.uid"
-                class="d-flex py-2 px-5 mt-3"
             >
-                <v-img
-                    class="flex-grow-0 my-2 mr-3"
-                    width="64"
-                    height="64"
-                    contain
-                    :src="iconOf(item.protoId)"
-                />
+                <v-card class="fill-x d-flex py-2 px-5 mt-3">
+                    <img
+                        class="flex-grow-0 my-2 mr-3"
+                        width="64"
+                        height="64"
+                        contain
+                        :src="iconOf(item.protoId)"
+                    />
 
-                <div class="flex-grow-1 d-flex flex-column">
-                    <h5 class="my-2">{{ nameOf(item.protoId) }}</h5>
-
-                    <span class="text-subtitle-1 grey--text px-5">{{ descOf(item.protoId) }}</span>
-                </div>
-
-                <div class="price-wrapper flex-shrink-0 fit-height align-self-end d-flex flex-column align-end pb-2">
-                    <v-chip class="fill-x mb-3 align-self-start d-flex">
-                        <span>{{ textOf('price') }}</span> 
-                        
-                        <v-spacer/>
-
-                        <span>{{ item.price | toEco }}</span>
-                    </v-chip>
-                    
-                    <div class="price-input-wrapper">
-                        <v-text-field
-                            label="Count"
-                            type="number"
-                            dense
-                            :messages="toEconomic(counts[index] * item.price)"
-                            :min="0"
-                            v-model.number="counts[index]"
-                        />
+                    <div class="flex-grow-1 d-flex flex-column">
+                        <h3 class="my-2">{{ nameOf(item.protoId) }}</h3>
                     </div>
-                </div>
-            </v-card>
+
+                    <div class="price-wrapper flex-shrink-0 fit-height align-self-end d-flex flex-column align-end pb-2">
+                        <v-chip class="fill-x mb-3 align-self-start d-flex">
+                            <span>{{ textOf('price') }}</span> 
+                            
+                            <v-spacer/>
+
+                            <span>{{ item.price | toEco }}</span>
+                        </v-chip>
+                        
+                        <div class="price-input-wrapper">
+                            <NumberInput
+                                v-model="counts[index]"
+                            />
+                        </div>
+                    </div>
+                </v-card>
+
+                <span class="text-left text-subtitle-1 grey--text px-5">{{ descOf(item.protoId) }}</span>
+
+                <v-divider/>
+            </v-row>
         </v-container>
 
         <div class="d-flex justify-center align-center py-3 px-10 white">
@@ -63,7 +62,8 @@ import game from "@/game/game";
 import { ShopItem } from "@/game/interfaces";
 import Vue from "vue";
 import { nameOf, iconOf, descOf, textOf } from "../utils/resources";
-import { toEconomic } from '../utils/number'
+import { toEconomic } from '../utils/number';
+import NumberInput from '@/components/NumberInput.vue';
 
 interface ShopData {
     items: ShopItem[];
@@ -71,6 +71,10 @@ interface ShopData {
 }
 
 export default Vue.extend({
+    components: {
+        NumberInput,
+    },
+
     data(): ShopData {
         return {
             items: [],
@@ -124,5 +128,10 @@ export default Vue.extend({
 }
 .price-input-wrapper {
     width: 6em;
+}
+.desc {
+    max-width: 100%;
+    text-overflow: ellipsis;
+    overflow: hidden;
 }
 </style>

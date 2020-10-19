@@ -17,19 +17,21 @@
             <Terminal class="flex-grow-1"/>
         </v-app-bar>
 
-        <v-navigation-drawer app permanent clipped>
-            <v-list>
-                <v-list-item
-                    v-for="route of routes"
-                    :key="route.path"
-                    :to="route.path"
-                >{{ route.name }}</v-list-item>
-            </v-list>
-        </v-navigation-drawer>
-
-        <v-main class="fill-y">
-            <router-view class="fill-y" />
+        <v-main class="fill-y overflow-hideen pd-10">
+            <router-view class="fill-y overflow-auto" />
         </v-main>
+
+        <v-bottom-navigation app grow dark>
+            <v-btn
+                v-for="route of routes"
+                :key="route.path"
+                :to="route.path"
+            >
+                <span v-text="route.name"/>
+
+                <v-icon v-text="route.icon"/>
+            </v-btn>
+        </v-bottom-navigation>
     </v-app>
 </template>
 
@@ -87,6 +89,10 @@ html, body, #app {
     height: 100%;
 }
 
+.fill-x {
+    width: 100%;
+}
+
 .fill-y {
     height: 100%;
 }
@@ -99,5 +105,9 @@ html, body, #app {
 
 .overflow-auto {
     overflow: auto;
+}
+
+.overflow-hideen {
+    overflow: hidden;
 }
 </style>

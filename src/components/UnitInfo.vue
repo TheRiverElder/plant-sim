@@ -1,10 +1,10 @@
 <template>
     <v-card
         :class="classes"
-        @click="$emit('click', value)"
+        @click="$emit('click', value.uid, $event)"
         @mousedown="$emit('mousedown', value.uid, $event)"
     >
-        <v-img
+        <img
             class="flex-grow-0 my-2 mr-3"
             width="64"
             height="64"
@@ -12,12 +12,10 @@
             :src="icon"
         />
 
-        <div class="flex-grow-1 text-left d-flex flex-column">
+        <div class="flex-grow-1 flex-shrink-1 text-left d-flex flex-column">
             <h4 class="my-2">{{ name }}</h4>
 
-            <span v-if="!dense" class="text-subtitle-1 grey--text px-5">{{
-                desc
-            }}</span>
+            <span v-if="!dense" class="text-subtitle-1 grey--text px-5" v-text="desc"/>
 
             <div class="d-flex">
                 <v-progress-linear
@@ -83,7 +81,7 @@ export default Vue.extend({
 
     computed: {
         classes() {
-            return ['pa-2', this.disabled ? 'disabled' : ''];
+            return ['pa-2', 'd-flex', this.disabled ? 'disabled' : ''];
         },
 
         properties() {
