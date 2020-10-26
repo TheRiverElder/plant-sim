@@ -19,9 +19,8 @@
 <script lang="ts">
 import { Vue } from 'vue-property-decorator'
 import game from '@/game/game';
-import { UnitData } from '@/game/interfaces';
-import { toEconomic } from '@/utils/number';
 import UnitInfo from '@/components/UnitInfo.vue';
+import { UnitData } from '@/game/interface/common-interfaces';
 
 interface InventoryData {
     // visiblePropertyKeys: { 

@@ -12,7 +12,7 @@
             <div v-if="reactor">
                 <p>Listing State</p>
 
-                <p>New-gen Power: {{ reactor.power.toPrecision(4) }} Pu</p>
+                <p>Power Buffer: {{ reactor.powerBuffer.toPrecision(4) }} Pu</p>
             </div>
         </v-container>
 
@@ -20,8 +20,7 @@
 
         <ReactorLayout
             v-if="reactor"
-            :width="reactor.width"
-            :height="reactor.height"
+            :layout="reactor.layout"
             :slots="reactor.slots"
             @click="select"
         />
@@ -32,16 +31,16 @@
             ref="heatmap"
             v-if="reactor"
             :cell-width="32"
-            :width="reactor.width"
-            :height="reactor.height"
+            :width="reactor.layout.width"
+            :height="reactor.layout.height"
             :heatmap="reactor.heatmap"
             :max-value="1e5"
             :grid="true"
             @click="select"
         />
 
-        <div v-if="listeningUnit">
-            <span>Pos: ({{ listeningPos.x }}, {{ listeningPos.y }})</span>
+        <div v-if="listeningUnit && reactor">
+            <span>Pos: ({{ (listeningIndex % reactor.layout.width) }}, {{ Math.floor(listeningIndex / reactor.layout.width) }}) Index: {{ listeningIndex }}</span>
 
             <UnitInfo :dense="true" :value="listeningUnit"/>
         </div>
@@ -51,19 +50,18 @@
 <script lang="ts">
 import { Vue } from 'vue-property-decorator'
 import game from '@/game/game';
-import { Uid, UnitData, ReactorData, UidMap } from '@/game/interfaces';
 import UnitInfo from '@/components/UnitInfo.vue';
 import Heatmap from '@/components/Heatmap.vue';
 import { iconOf } from '@/utils/resources';
-import { makeUidMap } from '@/utils/arrays';
 import ReactorLayout from "@/components/ReactorLayout.vue";
-import { Vector } from '@/game/types';
+import { ReactorData, UnitData } from '@/game/interface/common-interfaces';
+import { Uid, Vector } from '@/game/interface/types';
 
 interface ReactorMonitorData {
     reactorList: ReactorData[];
     currentReactorUid: number;
     reactor: ReactorData | null;
-    listeningPos: Vector | null;
+    listeningIndex: number;
     listeningUnit: UnitData | null;
 }
 
@@ -83,7 +81,7 @@ export default Vue.extend({
             reactorList: [],
             currentReactorUid: -1,
             reactor: null,
-            listeningPos: null,
+            listeningIndex: -1,
             listeningUnit: null,
         };
     },
@@ -93,9 +91,9 @@ export default Vue.extend({
             this.reactor = this.reactorList.find(r => r.uid === uid) || null;
         },
 
-        listeningPos(pos: Vector) {
+        listeningIndex(index: number) {
             if (this.reactor) {
-                this.listeningUnit = this.reactor.slots[this.reactor.width * pos.y + pos.x];
+                this.listeningUnit = this.reactor.slots[index];
             } else {
                 this.listeningUnit = null;
             }
@@ -112,15 +110,15 @@ export default Vue.extend({
             return iconOf(unit?.protoId || '');
         },
 
-        select(pos: Vector) {
-            this.listeningPos = pos;
+        select(index: number) {
+            this.listeningIndex = index;
         },
 
         update() {
             this.reactorList = game.getReactorList();
             this.reactor = this.reactorList.find(r => r.uid === this.currentReactorUid) || null;
-            if (this.listeningPos && this.reactor) {
-                this.listeningUnit = this.reactor.slots[this.reactor.width * this.listeningPos.y + this.listeningPos.x];
+            if (this.listeningIndex >= 0 && this.reactor) {
+                this.listeningUnit = this.reactor.slots[this.listeningIndex];
             } else {
                 this.listeningUnit = null;
             }
@@ -131,11 +129,14 @@ export default Vue.extend({
     },
 
     created() {
-        this.update();
         this.currentReactorUid = this.reactorList[0]?.uid;
         pid = setInterval(this.update.bind(this), 1000);
     },
     
+    mounted() {
+        this.update();
+    },
+
     beforeDestroy() {
         clearInterval(pid as number);
     },

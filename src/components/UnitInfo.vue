@@ -39,30 +39,17 @@
 </template>
 
 <script lang="ts">
-import { UnitData } from "@/game/interfaces";
 import { nameOf, iconOf, descOf, textOf } from "../utils/resources";
 import Vue from "vue";
+import { UnitData } from '@/game/interface/common-interfaces';
 
-const visiblePropertyKeys = [
-    {
-        key: "heat",
-        color: "red",
-        toValueStr: (v: number) => v.toFixed(2),
-        toProgress: (v: number) => v / 1e3,
-    },
-    {
-        key: "mass",
-        color: "yellow",
-        toValueStr: (v: number) => v.toFixed(2),
-        toProgress: (v: number) => v / 1e4,
-    },
-    {
-        key: "duration",
+const visiblePropertyKeys = {
+    duration: {
         color: "green",
         toValueStr: (v: number) => (v * 100).toFixed(2) + "%",
         toProgress: (v: number) => v * 100,
     },
-];
+};
 
 export default Vue.extend({
     name: "UnitInfo",
@@ -86,15 +73,11 @@ export default Vue.extend({
 
         properties() {
             const unit = this.value as UnitData;
-            return visiblePropertyKeys.map(
-                ({ key, color, toValueStr, toProgress }) => ({
-                    key,
-                    color,
-                    value: unit[key] || 0,
-                    valueStr: toValueStr(unit[key]),
-                    progress: toProgress(unit[key]),
-                })
-            );
+            return [
+                { key: 'heat', color: 'red', valueStr: unit.heat.toFixed(2), progress: unit.heat / 1e4 },
+                { key: 'mass', color: 'yellow', valueStr: unit.mass.toFixed(2), progress: unit.mass / 1e3 },
+                { key: 'duration', color: 'green', valueStr: (unit.duration * 100).toFixed(2) + "%", progress: unit.duration * 100 },
+            ];
         },
 
         icon() {

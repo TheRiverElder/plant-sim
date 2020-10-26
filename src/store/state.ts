@@ -1,4 +1,3 @@
-import { UnitData } from '@/game/interfaces';
 import Vue from 'vue';
 
 interface PlantSimState {

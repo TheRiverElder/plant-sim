@@ -1,7 +1,11 @@
 import { genUid } from '@/utils/number';
 import { genName } from '@/utils/strings';
 import initialize from './buildin';
-import { DeployScheme, GameInterface, Profile, PurchasementItem, Reactor, ReactorData, ResultReport, ShopItem, Uid, UidMap, Unit, UnitData } from './interfaces';
+import MatrixReactor from './buildin/reactor/MatrixReactor';
+import { ShopItem, ReactorData, UnitData, PurchasementItem, ResultReport, DeployScheme, Profile, ServerInterface } from './interface/common-interfaces';
+import { Reactor } from './interface/server-interfaces';
+import { Uid, UidMap } from './interface/types';
+import Unit from './Unit';
 
 interface DataType {
     reactors: Reactor[];
@@ -17,7 +21,7 @@ function initializeData(): DataType {
     initialize();
     return {
         reactors: [
-            new Reactor({
+            new MatrixReactor({
                 width: 9,
                 height: 7,
                 wallTemparature: 300,
@@ -29,32 +33,14 @@ function initializeData(): DataType {
             {
                 uid: genUid(),
                 price: 1000,
-                protoId: 'inertial_dust',
-                ctorParams: {
-                    heat: 0,
-                    mass: 10000,
-                    duration: 1,
-                },
+                protoId: 'fossil_fuel',
+                params: { mass: 5e3 },
             },
             {
                 uid: genUid(),
-                price: 2500,
-                protoId: 'fuel',
-                ctorParams: {
-                    heat: 0,
-                    mass: 30000,
-                    duration: 1,
-                },
-            },
-            {
-                uid: genUid(),
-                price: 360000,
+                price: 36000,
                 protoId: 'thermal_generator',
-                ctorParams: {
-                    heat: 0,
-                    mass: 5000,
-                    duration: 1,
-                },
+                params: { mass: 5e3 },
             },
         ],
         period: 1000,
@@ -70,8 +56,8 @@ function initializeData(): DataType {
 
 const data: DataType = initializeData();
 
-const COMMANDS: {[head: string]: (params: string[], game: GameInterface) => any} = {
-    "purchase": (params: string[], game: GameInterface) => {
+const COMMANDS: { [head: string]: (params: string[], game: ServerInterface) => any } = {
+    "purchase": (params: string[], game: ServerInterface) => {
         const cart = params.map(Number).map(uid => ({ uid, count: 1 }));
         game.purchase(cart);
     },
@@ -79,26 +65,26 @@ const COMMANDS: {[head: string]: (params: string[], game: GameInterface) => any}
 
 function tick() {
     data.reactors.forEach(r => r.tick());
-    data.account += Math.floor(data.reactors.reduce((s, r) => s + r.power, 0));
+    data.account += Math.floor(data.reactors.reduce((s, r) => s + r.powerBuffer, 0));
     data.lastModified += data.period;
 }
 
 let pid = -1;
 
-const localGameInterface: GameInterface = {
-    getShopItemList(): ShopItem[] {
+const localGameInterface: ServerInterface = {
+    getShopItemList(): Array<ShopItem> {
         return data.shop.map((si) => Object.assign({}, si));
     },
 
-    getReactorList(): ReactorData[] {
-        return data.reactors.map(r => r.getData());
+    getReactorList(): Array<ReactorData> {
+        return data.reactors.map(r => r.toJson());
     },
 
-    getInventory(): UnitData[] {
-        return data.inventory.map(u => u.getData());
+    getInventory(): Array<UnitData> {
+        return data.inventory.map(u => u.toJson());
     },
 
-    purchase(cart: PurchasementItem[]): ResultReport {
+    purchase(cart: Array<PurchasementItem>): ResultReport {
         const cache: Array<Unit> = [];
         const errors = [];
         let sum = 0;
@@ -107,7 +93,7 @@ const localGameInterface: GameInterface = {
             const item = data.shop.find(i => i.uid === uid);
             if (item) {
                 for (let i = 0; i < count; i++) {
-                    const unit = Unit.of(item.protoId, item.ctorParams);
+                    const unit = Unit.create(item.protoId, item.params);
                     cache.push(unit);
                 }
                 sum += item.price * count;
@@ -198,16 +184,19 @@ const localGameInterface: GameInterface = {
         }
 
         if (pid < 0) {
-            pid = setInterval(() => {
-                const now = Date.now();
-                tick();
-                data.lastModified = now;
-            }, data.period);
+            pid = setTimeout(() => {
+                pid = setInterval(() => {
+                    const now = Date.now();
+                    tick();
+                    data.lastModified = now;
+                }, data.period)
+            }, data.period - (onlineTime - data.lastModified));
         }
     },
 
     offline(): void {
         if (pid >= 0) {
+            clearTimeout(pid);
             clearInterval(pid);
             pid = -1;
         }

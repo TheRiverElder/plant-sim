@@ -1,20 +1,12 @@
-import InertialDust from './buildin/InertialDust';
-import { Uid, UnitData, UnitCtorData } from './interfaces';
-import { Identifible } from './types';
-import UnitProto from './UnitProto';
+import Empty from './buildin/unit-proto/Empty';
+import { UnitData } from './interface/common-interfaces';
+import { UnitCtorParams, UnitProto } from './interface/server-interfaces';
+import { Id, IdNumberMap, Jsonfible, Unique } from './interface/types';
 
-interface UnitCtorParams {
-    heat: number;
-    mass: number;
-    duration: number;
-    proto: UnitProto;
-    id?: Uid;
-    [prop: string]: any;
-}
-
-export default class Unit extends Identifible {
+export default class Unit extends Unique implements Jsonfible<UnitData> {
     private static prototypes: { [id: string]: UnitProto } = {};
-    public static protoOf(id: string) {
+
+    public static protoOf(id: Id) {
         return Unit.prototypes[id];
     }
 
@@ -26,40 +18,38 @@ export default class Unit extends Identifible {
         Unit.prototypes[proto.id] = proto
     }
 
-    public static of(proto: UnitProto | string, data: UnitCtorData): Unit {
+    public static create(proto: UnitProto | string, params: UnitCtorParams, unitParams: IdNumberMap = {}): Unit {
         if (typeof proto === 'string') {
             proto = Unit.prototypes[proto];
         }
-        const params: UnitCtorParams = {
-            proto: proto || new InertialDust(),
-            ...data,
-        }
-        const unit = new Unit(params);
-        unit.proto.setup(unit);
+        const unit = new Unit({ ...params, proto });
+        unit.proto.setup(unit, unitParams);
         return unit;
     }
 
+    proto: UnitProto;
     heat = 0;
     mass = 0;
     duration = 1;
-    proto: UnitProto;
-    [prop: string]: any;
+    data: IdNumberMap = {};
 
-    constructor(data: UnitCtorParams) {
-        super(data?.uid);
-        this.proto = data.proto;
-        Object.assign(this, data);
+    constructor({ uid, proto, heat, mass, duration }: UnitCtorParams) {
+        super(uid);
+        this.proto = proto || new Empty();
+        this.heat = heat || 0;
+        this.mass = mass || 5e3;
+        this.duration = duration || 1;
     }
 
-    getData(): UnitData {
-        const { uid, heat, mass, duration, proto, ...restData } = this;
+    toJson(): UnitData {
+        const { uid, heat, mass, duration, proto, data } = this;
         return {
             uid,
             heat,
             mass,
             duration,
             protoId: proto.id,
-            ...restData,
+            data,
         }
     }
 }

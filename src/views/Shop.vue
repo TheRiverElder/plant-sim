@@ -59,7 +59,7 @@
 
 <script lang="ts">
 import game from "@/game/game";
-import { ShopItem } from "@/game/interfaces";
+import { ShopItem } from "@/game/interface/common-interfaces";
 import Vue from "vue";
 import { nameOf, iconOf, descOf, textOf } from "../utils/resources";
 import { toEconomic } from '../utils/number';

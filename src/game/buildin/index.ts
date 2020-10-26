@@ -1,20 +1,20 @@
 import Unit from '../Unit'
-import Fuel from './Fuel'
-import ThermalGenerator from './ThermalGenerator'
+import ThermalGenerator from './unit-proto/ThermalGenerator'
 import pack from './resource-pack'
-import InertialDust from './InertialDust';
+import Empty from './unit-proto/Empty';
 import Res from '../Res';
+import FossilFuel from './unit-proto/FossilFuel';
 
 export default function initialize () {
-  Unit.register(new InertialDust());
-  Unit.register(new Fuel({
-    initialMass: 2e4,
+  Unit.register(new Empty());
+  Unit.register(new FossilFuel({
+    initialMass: 5e3,
     consumingRate: 10,
     heatRatio: 300,
     remainsRatio: 0.2,
   }));
   Unit.register(new ThermalGenerator({
-    initialMass: 1e5,
+    initialMass: 5e3,
     energyRatio: 0.35,
     workingThreshold: 1e4,
     damagingThreshold: 1.2e4,

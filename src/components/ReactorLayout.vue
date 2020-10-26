@@ -1,19 +1,18 @@
 <template>
-    <div ref="layout">
-        <div v-for="y of height" :key="y" class="d-flex">
-            <span
-                v-for="x of width"
-                :key="x"
-                class="cell"
-                @click="$emit('click', posOf(x, y), $event)"
-                @mouseup="$emit('mouseup', posOf(x, y), $event)"
-            >
-                <img
-                    :width="actualCellWidth"
-                    :height="actualCellWidth"
-                    :src="iconAt(x - 1, y - 1)"
-                />
-            </span>
+    <div class="reactor-layout" ref="layout">
+        <div 
+            v-for="(pos, index) of layout.slots" 
+            :key="index" 
+            class="slot"
+            :style="`left:${(pos.x + 0.5) * actualCellWidth}px;top:${(pos.y + 0.5) * actualCellWidth}px`"
+        >
+            <img
+                :width="actualCellWidth"
+                :height="actualCellWidth"
+                :src="iconAt(index)"
+                @click="$emit('click', index, $event)"
+                @mouseup="$emit('mouseup', index, $event)"
+            />
         </div>
     </div>
 </template>
@@ -21,12 +20,11 @@
 <script lang="ts">
 import Vue from "vue";
 import { iconOf } from "@/utils/resources";
-import { UnitData } from '@/game/interfaces';
+import { UnitData } from '@/game/interface/common-interfaces';
 
 export default Vue.extend({
     props: {
-        width: Number,
-        height: Number,
+        layout: Object,
         slots: Array,
         cellWidth: {
             type: Number,
@@ -41,40 +39,41 @@ export default Vue.extend({
     },
 
     methods: {
-        posOf(x: number, y: number) {
-            return {
-                x: x - 1,
-                y: y - 1,
-            };
+        iconAt(index: number) {
+            return iconOf((this.slots[index] as UnitData)?.protoId || "empty");
         },
 
-        iconAt(x: number, y: number) {
-            return iconOf((this.slots[this.width * y + x] as UnitData)?.protoId || "inertial_dust");
-        },
-
-        resizeCellWidth() {
-            this.actualCellWidth = (this.$el as HTMLDivElement).clientWidth / this.width;
+        resize() {
+            const el = this.$el as HTMLDivElement;
+            this.actualCellWidth = Math.round(el.clientWidth / this.layout.width);
+            el.style.height = this.layout.height * this.actualCellWidth + 'px';
         },
     },
 
     mounted() {
-        this.resizeCellWidth();
+        this.resize();
     },
 });
 </script>
 
 <style scoped>
-.cell:hover {
-    /* border: 0.1em solid #66ccff; */
-    /* filter: brightness(0.5); */
-    filter: invert(30%);
+.reactor-layout {
+    position: relative;
 }
-/* .cell::after {
-    content: "";
+.slot:hover {
+    border: 0.1em solid #66ccff;
+    filter: brightness(0.5);
+    filter: invert(30%);
+    z-index: 2;
+}
+.slot {
     position: absolute;
     top: 0;
     left: 0;
-    border: 0.1em solid #66ccff;
-    filter: brightness(0.5);
-} */
+    transform: translate(-50%, -50%);
+    height: fit-content;
+}
+.slot > img {
+    display: block;
+}
 </style>

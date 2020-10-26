@@ -35,11 +35,10 @@
         </div>
 
         <ReactorLayout
+            class="flex-shrink-0"
             v-if="currentReactor"
-            :width="currentReactor.width"
-            :height="currentReactor.height"
+            :layout="currentReactor.layout"
             :slots="previewSlots"
-            :items-map="itemsMap"
             @mouseup="replace"
             @click="replace"
         />
@@ -74,12 +73,12 @@
 <script lang="ts">
 import { Vue } from "vue-property-decorator";
 import game from "@/game/game";
-import { Uid, UnitData, ReactorData, UidMap } from "@/game/interfaces";
+import { UnitData, ReactorData } from "@/game/interface/common-interfaces";
 import UnitInfo from "@/components/UnitInfo.vue";
 import ReactorLayout from "@/components/ReactorLayout.vue";
 import { iconOf, nameOf, textOf } from "@/utils/resources";
 import { makeUidMap } from "@/utils/arrays";
-import { Vector } from "@/game/types";
+import { Uid, UidMap, Vector } from '@/game/interface/types';
 
 interface DeployerData {
     reactorList: ReactorData[];
@@ -105,7 +104,7 @@ interface DeployerMethods {
     hold(uid: Uid, event: MouseEvent): void;
     deploy(): void;
     mouseMoveHandler(event: MouseEvent): void;
-    replace(pos: Vector): void;
+    replace(index: number): void;
 }
 
 export default Vue.extend<DeployerData, DeployerMethods, DeployerComputed, {}>({
@@ -202,8 +201,7 @@ export default Vue.extend<DeployerData, DeployerMethods, DeployerComputed, {}>({
             }
         },
 
-        replace({ x, y }: Vector) {
-            const index = y * (this.currentReactor?.width || 0) + x;
+        replace(index: number) {
             if (!this.removal) {
                 if (this.holding >= 0) {
                     if (this.preview[index] >= 0) {

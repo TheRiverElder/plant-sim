@@ -10,7 +10,6 @@
 </template>
 
 <script lang="ts">
-import Reactor from "@/game/Reactor";
 import { paintHeatmap } from "@/utils/graphics";
 import { Vue } from "vue-property-decorator";
 import { mapState } from "vuex";
@@ -33,7 +32,10 @@ export default Vue.extend({
         height: Number,
         heatmap: Array,
         maxValue: Number,
-        grid: Boolean,
+        grid: {
+            type: Boolean,
+            default: true,
+        },
     },
 
     data() {
@@ -58,7 +60,7 @@ export default Vue.extend({
                     canvas,
                     this.actualCellWidth,
                     this.maxValue,
-                    this.grid
+                    this.grid,
                 );
             }
         },
@@ -70,11 +72,11 @@ export default Vue.extend({
         handleClickCanvas(event: MouseEvent) {
             const x = Math.floor(event.offsetX / this.actualCellWidth);
             const y = Math.floor(event.offsetY / this.actualCellWidth);
-            this.$emit("click", { x, y });
+            this.$emit("click", y * this.width + x, event);
         },
 
         resizeCellWidth() {
-            this.actualCellWidth = (this.$el as HTMLDivElement).clientWidth / this.width;
+            this.actualCellWidth = Math.floor((this.$el as HTMLDivElement).clientWidth / this.width);
             this.totalWidth = this.width * this.actualCellWidth;
             this.totalHeight = this.height * this.actualCellWidth;
         },
@@ -82,10 +84,6 @@ export default Vue.extend({
 
     mounted() {
         this.resizeCellWidth();
-        Object.assign(this.$refs.canvas, {
-            width: this.cellWidth * this.width,
-            height: this.cellWidth * this.height,
-        });
         this.paint();
     },
 });
