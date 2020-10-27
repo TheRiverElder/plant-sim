@@ -1,6 +1,6 @@
 import ResourcePack from '../Res';
-import { UnitCtorParams } from './server-interfaces';
-import { Id, IdNumberMap, Uid, Vector } from './types';
+import { UnitParams } from './server-interfaces';
+import { Id, Uid, Vector } from './types';
 
 interface Layout {
     width: number;
@@ -29,35 +29,36 @@ interface Profile {
     account: number;
 }
 
-interface UnitData {
+interface BaseTag {
     uid: Uid;
+    protoId: Id;
+    [prop: string]: any;
+}
+
+interface UnitData extends BaseTag {
     heat: number;
     mass: number;
     duration: number;
-    protoId: Id;
-    data: IdNumberMap;
 }
 
-interface ReactorData {
-    uid: Uid;
+interface ReactorData extends BaseTag {
     name: string;
     powerBuffer: number;
-    slots: UnitData[];
-    layout: Layout;
+    slots: Array<UnitData>;
+    layout?: Layout;
     heatmap?: number[][];
 }
 
 interface ShopItem {
     uid: Uid;
     price: number;
-    protoId: string;
-    params: UnitCtorParams;
+    params: UnitParams;
 }
 
 interface ServerInterface {
-    getShopItemList(): ShopItem[];
-    getReactorList(): ReactorData[];
-    getInventory(): UnitData[];
+    getShopItemList(): Array<ShopItem>;
+    getReactorList(): Array<ReactorData>;
+    getInventory(): Array<UnitData>;
     getProfile(): Profile;
 
     purchase(cart: PurchasementItem[]): ResultReport;
@@ -72,6 +73,7 @@ interface ServerInterface {
 export {
     ResourcePack,
 
+    BaseTag,
     UnitData,
     ReactorData,
     Profile,

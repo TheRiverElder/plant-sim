@@ -4,7 +4,7 @@
             v-for="(pos, index) of layout.slots" 
             :key="index" 
             class="slot"
-            :style="`left:${(pos.x + 0.5) * actualCellWidth}px;top:${(pos.y + 0.5) * actualCellWidth}px`"
+            :style="`left:${(pos.x) * actualCellWidth}px;top:${(pos.y) * actualCellWidth}px`"
         >
             <img
                 :width="actualCellWidth"

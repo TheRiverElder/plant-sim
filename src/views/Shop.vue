@@ -12,11 +12,11 @@
                         width="64"
                         height="64"
                         contain
-                        :src="iconOf(item.protoId)"
+                        :src="iconOf(item.params.protoId)"
                     />
 
                     <div class="flex-grow-1 d-flex flex-column">
-                        <h3 class="my-2">{{ nameOf(item.protoId) }}</h3>
+                        <h3 class="my-2 text-left">{{ nameOf(item.params.protoId) }}</h3>
                     </div>
 
                     <div class="price-wrapper flex-shrink-0 fit-height align-self-end d-flex flex-column align-end pb-2">
@@ -36,7 +36,7 @@
                     </div>
                 </v-card>
 
-                <span class="text-left text-subtitle-1 grey--text px-5">{{ descOf(item.protoId) }}</span>
+                <span class="text-left text-subtitle-1 grey--text px-5">{{ descOf(item.params.protoId) }}</span>
 
                 <v-divider/>
             </v-row>

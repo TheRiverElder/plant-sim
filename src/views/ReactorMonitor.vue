@@ -55,7 +55,7 @@ import Heatmap from '@/components/Heatmap.vue';
 import { iconOf } from '@/utils/resources';
 import ReactorLayout from "@/components/ReactorLayout.vue";
 import { ReactorData, UnitData } from '@/game/interface/common-interfaces';
-import { Uid, Vector } from '@/game/interface/types';
+import { Uid } from '@/game/interface/types';
 
 interface ReactorMonitorData {
     reactorList: ReactorData[];

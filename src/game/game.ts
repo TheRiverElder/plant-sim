@@ -1,16 +1,15 @@
 import { genUid } from '@/utils/number';
 import { genName } from '@/utils/strings';
 import initialize from './buildin';
-import MatrixReactor from './buildin/reactor/MatrixReactor';
 import { ShopItem, ReactorData, UnitData, PurchasementItem, ResultReport, DeployScheme, Profile, ServerInterface } from './interface/common-interfaces';
-import { Reactor } from './interface/server-interfaces';
 import { Uid, UidMap } from './interface/types';
-import Unit from './Unit';
+import ReactorFactory from './ReactorFactory';
+import UnitFactory from './UnitFactory';
 
 interface DataType {
-    reactors: Reactor[];
-    inventory: Unit[];
-    shop: ShopItem[];
+    reactors: Array<ReactorData>;
+    inventory: Array<UnitData>;
+    shop: Array<ShopItem>;
     period: number;
     lastModified: number;
     ownerName: string;
@@ -21,11 +20,15 @@ function initializeData(): DataType {
     initialize();
     return {
         reactors: [
-            new MatrixReactor({
+            ReactorFactory.create({
+                protoId: 'matrix_reactor',
                 width: 9,
                 height: 7,
                 wallTemparature: 300,
-                name: genName(),
+            }),
+            ReactorFactory.create({
+                protoId: 'coil_reactor',
+                accessary: 8,
             }),
         ],
         inventory: [],
@@ -33,14 +36,26 @@ function initializeData(): DataType {
             {
                 uid: genUid(),
                 price: 1000,
-                protoId: 'fossil_fuel',
-                params: { mass: 5e3 },
+                params: { 
+                    protoId: 'fossil_fuel',
+                    mass: 5e3,
+                },
             },
             {
                 uid: genUid(),
                 price: 36000,
-                protoId: 'thermal_generator',
-                params: { mass: 5e3 },
+                params: { 
+                    protoId: 'thermal_generator',
+                    mass: 5e3,
+                },
+            },
+            {
+                uid: genUid(),
+                price: 9000,
+                params: { 
+                    protoId: 'neuclear_rod',
+                    mass: 5e3,
+                },
             },
         ],
         period: 1000,
@@ -50,11 +65,44 @@ function initializeData(): DataType {
     };
 }
 
-// function save(): void {
-//     localStorage.setItem('plant-sim-data', JSON.stringify(data));
-// }
-
 const data: DataType = initializeData();
+
+function load(): void {
+    const json = localStorage.getItem('plant-sim-data');
+    if (json) {
+        const savedData: DataType | null = JSON.parse(json);
+        if (savedData) {
+            data.period = savedData.period;
+            data.lastModified = savedData.lastModified;
+            data.ownerName = savedData.ownerName;
+            data.account = savedData.account;
+
+            data.inventory = savedData.inventory;
+            data.shop = savedData.shop;
+            data.reactors = savedData.reactors;
+        }
+    }
+}
+
+function save(): void {
+    localStorage.setItem('plant-sim-data', JSON.stringify({
+        period: data.period,
+        lastModified: data.lastModified,
+        ownerName: data.ownerName,
+        account: data.account,
+        inventory: data.inventory,
+        shop: data.shop,
+        reactors: data.reactors,
+    }));
+}
+
+function tick() {
+    data.reactors.forEach(r => ReactorFactory.prototypes[r.protoId].tick(r));
+    data.account += Math.floor(data.reactors.reduce((s, r) => s + r.powerBuffer, 0));
+    data.lastModified += data.period;
+}
+
+let pid = -1;
 
 const COMMANDS: { [head: string]: (params: string[], game: ServerInterface) => any } = {
     "purchase": (params: string[], game: ServerInterface) => {
@@ -63,29 +111,21 @@ const COMMANDS: { [head: string]: (params: string[], game: ServerInterface) => a
     },
 };
 
-function tick() {
-    data.reactors.forEach(r => r.tick());
-    data.account += Math.floor(data.reactors.reduce((s, r) => s + r.powerBuffer, 0));
-    data.lastModified += data.period;
-}
-
-let pid = -1;
-
 const localGameInterface: ServerInterface = {
     getShopItemList(): Array<ShopItem> {
-        return data.shop.map((si) => Object.assign({}, si));
+        return data.shop;
     },
 
     getReactorList(): Array<ReactorData> {
-        return data.reactors.map(r => r.toJson());
+        return data.reactors.map(r => ReactorFactory.prototypes[r.protoId].toJson(r));
     },
 
     getInventory(): Array<UnitData> {
-        return data.inventory.map(u => u.toJson());
+        return data.inventory;
     },
 
     purchase(cart: Array<PurchasementItem>): ResultReport {
-        const cache: Array<Unit> = [];
+        const cache: Array<UnitData> = [];
         const errors = [];
         let sum = 0;
         for (let i = 0; i < cart.length && sum <= data.account; i++) {
@@ -93,7 +133,7 @@ const localGameInterface: ServerInterface = {
             const item = data.shop.find(i => i.uid === uid);
             if (item) {
                 for (let i = 0; i < count; i++) {
-                    const unit = Unit.create(item.protoId, item.params);
+                    const unit = UnitFactory.create(item.params);
                     cache.push(unit);
                 }
                 sum += item.price * count;
@@ -146,7 +186,7 @@ const localGameInterface: ServerInterface = {
         }
 
         // Extract items and find non-exist items
-        const units: UidMap<Unit> = {};
+        const units: UidMap<UnitData> = {};
         uidSet.delete(-1);
         for (let index = 0; index < data.inventory.length && uidSet.size > 0;) {
             const unit = data.inventory[index];
@@ -178,6 +218,7 @@ const localGameInterface: ServerInterface = {
     },
 
     online(): void {
+        load();
         const onlineTime = Date.now();
         while (onlineTime - data.lastModified >= data.period) {
             tick();
@@ -195,6 +236,7 @@ const localGameInterface: ServerInterface = {
     },
 
     offline(): void {
+        save();
         if (pid >= 0) {
             clearTimeout(pid);
             clearInterval(pid);

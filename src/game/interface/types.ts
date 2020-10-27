@@ -21,8 +21,8 @@ class Unique {
     }
 }
 
-interface Jsonfible<T> {
-    toJson(): T;
+interface Jsonfible<TObject, TData> {
+    toJson(obj?: TObject): TData;
 }
 
 export {

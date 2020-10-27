@@ -1,138 +1,106 @@
-import { Reactor } from '@/game/interface/server-interfaces';
-import { Layout, ReactorData } from '../../interface/common-interfaces';
-import { Uid, Vector } from '../../interface/types'
-import Unit from '../../Unit';
+import { ReactorParams, ReactorProto } from '@/game/interface/server-interfaces';
+import UnitFactory from '@/game/UnitFactory';
+import { ReactorData, UnitData } from '../../interface/common-interfaces';
 
 const defaultInertialDustParams = {
-  heat: 0,
+  protoId: 'empty',
   mass: 10000,
-  duration: 1,
 };
 
-interface ReactorCtorParams {
-  width: number;
-  height: number;
-  uid?: Uid;
-  name?: string;
-  wallTemparature: number;
-}
+export default class MatrixReactor implements ReactorProto {
+  id = "matrix_reactor";
 
-export default class MatrixReactor extends Reactor {
-  name: string;
-  wallTemparature: number;
-  slots: Unit[];
-  powerBuffer = 0;
-  layout: Layout;
-
-  bufferedHeatMap: number[][];
-
-  constructor({ width, height, wallTemparature, uid, name }: ReactorCtorParams) {
-    super(uid);
-    this.layout = {
-      width: width,
-      height: height,
-      slots: Array(width * height).fill(0).map((_, i) => ({ x: i % width, y: Math.floor(i / width) })),
-    };
-    this.name = name || 'Reactor-' + this.uid;
-    this.wallTemparature = wallTemparature;
-    this.slots = Array.from(Array(width * height), () => Unit.create('empty', defaultInertialDustParams));
-    this.bufferedHeatMap = this.makeBufferedHeatmap();
+  setup(reactor: ReactorData): void {
+    reactor.width = reactor.width || 1;
+    reactor.height = reactor.height || 1;
+    reactor.wallTemparature = reactor.wallTemparature || 30;
+    reactor.slots = Array(reactor.width * reactor.height)
+      .fill(0)
+      .map(() => UnitFactory.create(defaultInertialDustParams, true));
   }
 
-  public indexOf(x: number, y: number): number {
-    return (x >= 0 && x < this.layout.width && y >= 0 && y < this.layout.height) ? y * this.layout.width + x : -1;
-  }
-
-  public posOf(index: number): Vector {
-    return (index >= 0 && index < this.slots.length) ? {
-      x: index % this.layout.width,
-      y: Math.floor(index / this.layout.width),
-    } : { x: -1, y: -1 };
-  }
-
-  isInRange(x: number, y: number): boolean {
-    return x >= 0 && y >= 0 && x < this.layout.width && y < this.layout.height;
-  }
-
-  makeBufferedHeatmap() {
+  makeBufferedHeatmap(reactor: ReactorData): Array<Array<number>> {
     return [
-      Array(this.layout.width + 2).fill(this.wallTemparature),
-      ...Array.from(Array(this.layout.height), (v, r) => [
-        this.wallTemparature,
-        ...this.slots.slice(r * this.layout.width, (r + 1) * this.layout.width).map(u => u.heat),
-        this.wallTemparature
+      Array(reactor.width + 2).fill(reactor.wallTemparature),
+      ...Array.from(Array(reactor.height), (v, r) => [
+        reactor.wallTemparature,
+        ...reactor.slots.slice(r * reactor.width, (r + 1) * reactor.width).map(u => u.heat),
+        reactor.wallTemparature
       ]),
-      Array(this.layout.width + 2).fill(this.wallTemparature),
+      Array(reactor.width + 2).fill(reactor.wallTemparature),
     ];
   }
 
-  getHeat(x: number, y: number): number {
-    return this.isInRange(x, y) ? this.getUnit(x, y).heat : this.wallTemparature;
-  }
-
-  getUnit(x: number, y: number): Unit {
-    return this.slots[this.indexOf(x, y)] || { heat: 0 };
-  }
-
-  setUnit(x: number, y: number, unit?: Unit | null): Unit | null {
-    const index = this.indexOf(x, y);
-    if (index >= 0) {
-      const prev = this.slots[index];
-      this.slots[index] = unit || Unit.create('inertial_dust', defaultInertialDustParams);
-      return prev;
-    }
-    return null;
-  }
-
-  tick() {
-    this.powerBuffer = 0;
-    this.slots.forEach((unit, index) => {
+  tick(reactor: ReactorData) {
+    reactor.powerBuffer = 0;
+    reactor.slots.forEach((unit, index) => {
       if (unit) {
-        unit.proto.tick(unit, this.posOf(index), this);
+        UnitFactory.prototypes[unit.protoId].tick(unit, { x: index % reactor.width, y: Math.floor(index / reactor.width) }, reactor);
       }
     })
-    this.bufferedHeatMap = this.makeBufferedHeatmap();
-    this.heatFlow();
-    this.bufferedHeatMap = this.makeBufferedHeatmap();
+    this.heatFlow(reactor.slots, reactor.width as number, reactor.height as number);
     // console.log('tick')
   }
 
-  heatFlow() {
+  heatFlow(slots: Array<UnitData>, width: number, height: number) {
     const dt = 0.1
-    const deltaHeatmap: number[] = this.slots.map((unit, index) => {
+    const deltaHeatmap: number[] = slots.map((unit, index) => {
       if (!unit) {
         return 0;
       }
-      const pos = this.posOf(index);
+      const pos = { x: index % width, y: Math.floor(index / width) };
       const ch = unit.heat;
       const { x, y } = pos;
       const neig = [
-        this.getUnit(x - 1, y),
-        this.getUnit(x + 1, y),
-        this.getUnit(x, y - 1),
-        this.getUnit(x, y + 1)
+        this.getUnit(slots, width, height, x, y + 1),
+        this.getUnit(slots, width, height, x, y - 1),
+        this.getUnit(slots, width, height, x + 1, y),
+        this.getUnit(slots, width, height, x - 1, y),
       ];
-      return neig.filter(n => !!n).reduce((s, n) => s + (n.heat - ch) / 5 * dt, 0);
+      return neig.filter(n => !!n).reduce((s, n) => s + ((n as UnitData).heat - ch) / 5 * dt, 0);
     })
-    this.slots.forEach((unit, index) => {
+    slots.forEach((unit, index) => {
       if (unit) {
         unit.heat = (unit.heat || 0) + deltaHeatmap[index];
       }
     })
   }
 
-  produce(power: number) {
-    this.powerBuffer += power;
+  getUnit(slots: Array<UnitData>, width: number, height: number, x: number, y: number): UnitData | null {
+    return (x < 0 || y < 0 || x >= width || y >= height) ? null : slots[y * width + x];
   }
 
-  toJson(): ReactorData {
+  produce(reactor: ReactorData, power: number) {
+    reactor.powerBuffer += power;
+  }
+
+  toJson(reactor: ReactorData): ReactorData {
+    const width: number = reactor.width;
+    const height: number = reactor.height;
     return {
-      uid: this.uid,
-      name: this.name,
-      powerBuffer: this.powerBuffer,
-      layout: this.layout,
-      slots: this.slots.map(u => u.toJson()),
-      heatmap: this.bufferedHeatMap,
+      protoId: this.id,
+      uid: reactor.uid,
+      name: reactor.name,
+      powerBuffer: reactor.powerBuffer,
+      layout: {
+        width,
+        height,
+        slots: Array(width * height).fill(0).map((_, i) => ({ x: i % width + 0.5, y: Math.floor(i / width) + 0.5 })),
+      },
+      slots: reactor.slots,
+      heatmap: this.makeBufferedHeatmap(reactor),
+    };
+  }
+
+  toData(reactor: ReactorData): ReactorParams {
+    return {
+      protoId: this.id,
+      uid: reactor.uid,
+      name: reactor.name,
+      powerBuffer: reactor.powerBuffer,
+      slots: reactor.slots,
+      width: reactor.width,
+      height: reactor.height,
     };
   }
 }

@@ -1,4 +1,5 @@
-import { Unit, UnitProto } from '@/game/interface/server-interfaces';
+import { UnitData } from '@/game/interface/common-interfaces';
+import { UnitParams, UnitProto } from '@/game/interface/server-interfaces';
 import { Id } from '@/game/interface/types';
 
 interface FossilFuelConfig {
@@ -18,17 +19,21 @@ export default class FossilFuel implements UnitProto {
       this.config = config;
     }
 
-    setup (unit: Unit): void {
-      unit.data.fuelMass = this.config.initialMass;
+    setup (unit: UnitData): void {
+      unit.fuelMass = this.config.initialMass;
     }
 
-    tick (unit: Unit): void {
-      const consumedFuel = Math.min(this.config.consumingRate, unit.data.fuelMass);
+    tick (unit: UnitData): void {
+      const consumedFuel = Math.min(this.config.consumingRate, unit.fuelMass);
       const remainderMass = consumedFuel * this.config.remainsRatio;
-      unit.data.fuelMass -= consumedFuel;
+      unit.fuelMass -= consumedFuel;
       unit.mass = unit.mass - consumedFuel + remainderMass;
       // reactor.change('heat', consumedFuel * this.config.heatRatio);
       unit.heat += consumedFuel * this.config.heatRatio;
-      unit.duration = unit.data.fuelMass / this.config.initialMass;
+      unit.duration = unit.fuelMass / this.config.initialMass;
+    }
+
+    toData(unit: UnitData): UnitParams {
+      return unit;
     }
 }

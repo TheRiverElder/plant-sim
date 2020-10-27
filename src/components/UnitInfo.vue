@@ -43,14 +43,6 @@ import { nameOf, iconOf, descOf, textOf } from "../utils/resources";
 import Vue from "vue";
 import { UnitData } from '@/game/interface/common-interfaces';
 
-const visiblePropertyKeys = {
-    duration: {
-        color: "green",
-        toValueStr: (v: number) => (v * 100).toFixed(2) + "%",
-        toProgress: (v: number) => v * 100,
-    },
-};
-
 export default Vue.extend({
     name: "UnitInfo",
 

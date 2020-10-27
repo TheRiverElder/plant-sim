@@ -12,16 +12,6 @@
 <script lang="ts">
 import { paintHeatmap } from "@/utils/graphics";
 import { Vue } from "vue-property-decorator";
-import { mapState } from "vuex";
-
-// eslint-disable-next-line
-function lerp(n: number) {
-    return 6 * Math.pow(n, 5) - 15 * Math.pow(n, 4) + 10 * Math.pow(n, 3);
-}
-
-function watcher(this: { paint: () => void }) {
-    this.paint();
-}
 
 export default Vue.extend({
     name: "Heatmap",

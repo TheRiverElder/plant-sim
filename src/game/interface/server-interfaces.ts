@@ -1,45 +1,43 @@
-import { Id, IdNumberMap, Jsonfible, Tickable, Uid, Unique, Vector } from './types';
-import Unit from '../Unit';
-import { Layout, ReactorData } from './common-interfaces';
+import { Id, IdNumberMap, Jsonfible, Uid, Vector } from './types';
+import { Layout, ReactorData, UnitData } from './common-interfaces';
 
 interface UnitProto {
     id: Id;
-    setup(unit: Unit, params: IdNumberMap): void;
-    tick(unit: Unit, position: Vector, reactor: Reactor): void;
+    setup(unit: UnitData, params: IdNumberMap): void;
+    tick(unit: UnitData, position: Vector, reactor: ReactorData): void;
+    toData(unit: UnitData): UnitParams;
 }
 
-abstract class Reactor extends Unique implements Tickable, Jsonfible<ReactorData> {
-    abstract toJson(): ReactorData;
-
-    abstract tick(dt?: number): void;
-    
-    abstract slots: Array<Unit>;
-
-    abstract layout: Layout;
-
-    abstract powerBuffer: number;
-
-    abstract produce(dp: number): void;
+interface ReactorProto extends Jsonfible<ReactorData, ReactorData> {
+    id: Id;
+    produce(reactor: ReactorData, dp: number): void;
+    setup(reactor: ReactorData): void;
+    tick(reactor: ReactorData): void;
+    toData(reactor: ReactorData): ReactorParams;
 }
 
-interface UnitCtorParams {
+interface UnitParams {
     uid?: Uid;
-    proto?: UnitProto;
+    protoId: Id;
     heat?: number;
     mass?: number;
     duration?: number;
+    [prop: string]: any;
 }
 
-interface UnitFactory {
-    create(): Unit;
+interface ReactorParams {
+    uid?: Uid;
+    protoId: Id;
+    name?: string;
+    powerBuffer?: number;
+    slots?: Array<UnitData>;
+    [prop: string]: any;
 }
 
 export {
-    Reactor,
-    Unit,
+    ReactorProto,
     UnitProto,
-    Layout,
 
-    UnitCtorParams,
-    UnitFactory,
+    UnitParams,
+    ReactorParams,
 }

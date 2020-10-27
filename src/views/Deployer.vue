@@ -78,7 +78,7 @@ import UnitInfo from "@/components/UnitInfo.vue";
 import ReactorLayout from "@/components/ReactorLayout.vue";
 import { iconOf, nameOf, textOf } from "@/utils/resources";
 import { makeUidMap } from "@/utils/arrays";
-import { Uid, UidMap, Vector } from '@/game/interface/types';
+import { Uid, UidMap } from '@/game/interface/types';
 
 interface DeployerData {
     reactorList: ReactorData[];
