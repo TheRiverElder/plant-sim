@@ -6,18 +6,18 @@
     >
         <img
             class="flex-grow-0 my-2 mr-3"
-            width="64"
-            height="64"
+            :width="iconSize"
+            :height="iconSize"
             contain
             :src="icon"
         />
 
-        <div class="flex-grow-1 flex-shrink-1 text-left d-flex flex-column">
-            <h4 class="my-2">{{ name }}</h4>
+        <div :class="'flex-grow-1 flex-shrink-1 text-left d-flex' + (line ? ' align-center' : ' flex-column')">
+            <h4 class="my-1">{{ name }}</h4>
 
             <span v-if="!dense" class="text-subtitle-1 grey--text px-5" v-text="desc"/>
 
-            <div class="d-flex">
+            <div class="d-flex flex-grow-1">
                 <v-progress-linear
                     v-for="pair of properties"
                     class="flex-grow-1 mx-2"
@@ -56,11 +56,19 @@ export default Vue.extend({
             type: Boolean,
             default: false,
         },
+        line: {
+            type: Boolean,
+            default: false,
+        },
+        iconSize: {
+            type: Number,
+            default: 64,
+        },
     },
 
     computed: {
         classes() {
-            return ['pa-2', 'd-flex', this.disabled ? 'disabled' : ''];
+            return ['d-flex', this.disabled ? 'disabled' : '', this.line ? 'pa-1' : 'pa-2'].join(' ');
         },
 
         properties() {

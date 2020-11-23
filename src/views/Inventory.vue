@@ -8,6 +8,8 @@
                 :dense="true"
                 class="d-flex py-2 px-5 mt-3"
             />
+
+            <v-chip v-if="!inventory.length">空空如也~</v-chip>
         </v-container>
 
         <div class="d-flex justify-center align-center py-3 px-10 white">

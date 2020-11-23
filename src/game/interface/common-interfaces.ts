@@ -1,11 +1,11 @@
 import ResourcePack from '../Res';
 import { UnitParams } from './server-interfaces';
-import { Id, Uid, Vector } from './types';
+import { Id, Img, Uid, Vector } from './types';
 
-interface Layout {
+interface Layout extends Img {
     width: number;
     height: number;
-    slots: Array<Vector>;
+    slots: Array<Vector & Img>;
 }
 
 interface PurchasementItem {

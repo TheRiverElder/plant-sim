@@ -3,10 +3,9 @@
         ref="deployer"
         class="fill px-2 overflow-hidden d-flex flex-column"
         @mousemove="mouseMoveHandler"
-        @mouseup="unhold"
         @mouseleave="unhold"
     >
-        <div class="flex-grow-0 d-flex align-center">
+        <div class="py-2 flex-grow-0 flex-shrink-0 d-flex align-center">
             <v-select
                 class="flex-grow-1 flex-shrink-1"
                 label="Reactor"
@@ -19,18 +18,10 @@
                 hide-details
             />
 
-            <v-checkbox
-                class="mx-5"
-                label="Removal"
-                v-model="removal"
-                dense
-                hide-details
-            />
+            <v-btn class="mx-2" color="warning" @click="reset">{{ textOf('reset') }}</v-btn>
 
-            <v-btn @click="deploy">
+            <v-btn color="primary" @click="deploy">
                 <span v-text="textOf('deploy')" />
-
-                <v-icon>mdi-to-arrow</v-icon>
             </v-btn>
         </div>
 
@@ -38,8 +29,7 @@
             class="flex-shrink-0"
             v-if="currentReactor"
             :layout="currentReactor.layout"
-            :slots="previewSlots"
-            @mouseup="replace"
+            :slots="preview"
             @click="replace"
         />
 
@@ -47,25 +37,26 @@
 
         <div class="flex-grow-1 overflow-auto">
             <UnitInfo
-                v-for="item of inventory"
+                v-for="(item, index) of inventory"
                 :key="item.uid"
                 class="d-flex py-2 px-5 mt-3"
                 :value="item"
                 :dense="true"
-                :disabled="occupyCounters[item.uid] > 0"
-                @mousedown="hold"
-                @click="hold"
+                :line="true"
+                :icon-size="32"
+                :disabled="holdingIndex === index"
+                @click="hold(index)"
             />
         </div>
 
         <img
-            v-if="holding >= 0"
+            v-if="holdingIndex >= 0"
             ref="holding"
             class="holding"
             width="64"
             height="64"
             contain
-            :src="iconOf(itemsMap[holding].protoId)"
+            :src="iconOf(inventory[holdingIndex].protoId)"
         />
     </div>
 </template>
@@ -77,19 +68,16 @@ import { UnitData, ReactorData } from "@/game/interface/common-interfaces";
 import UnitInfo from "@/components/UnitInfo.vue";
 import ReactorLayout from "@/components/ReactorLayout.vue";
 import { iconOf, nameOf, textOf } from "@/utils/resources";
-import { makeUidMap } from "@/utils/arrays";
-import { Uid, UidMap } from '@/game/interface/types';
+import { Uid } from '@/game/interface/types';
 
 interface DeployerData {
     reactorList: ReactorData[];
+    initiateInventory: Array<UnitData>;
     inventory: UnitData[];
-    itemsMap: { [uid: number]: UnitData };
     currentReactorUid: Uid;
     currentReactor: ReactorData | null;
-    preview: Array<Uid>;
-    holding: Uid;
-    occupyCounters: UidMap<number>;
-    removal: boolean;
+    preview: Array<UnitData>;
+    holdingIndex: number;
 }
 
 interface DeployerComputed {
@@ -104,7 +92,8 @@ interface DeployerMethods {
     hold(uid: Uid, event: MouseEvent): void;
     deploy(): void;
     mouseMoveHandler(event: MouseEvent): void;
-    replace(index: number): void;
+    replace(index: number, event: MouseEvent): void;
+    reset(): void;
 }
 
 export default Vue.extend<DeployerData, DeployerMethods, DeployerComputed, {}>({
@@ -118,14 +107,12 @@ export default Vue.extend<DeployerData, DeployerMethods, DeployerComputed, {}>({
     data(): DeployerData {
         return {
             reactorList: [],
+            initiateInventory: [],
             inventory: [],
-            itemsMap: {},
             currentReactorUid: -1,
             currentReactor: null,
             preview: [],
-            holding: -1,
-            occupyCounters: {},
-            removal: false,
+            holdingIndex: -1,
         };
     },
 
@@ -133,24 +120,7 @@ export default Vue.extend<DeployerData, DeployerMethods, DeployerComputed, {}>({
         currentReactorUid(uid: Uid) {
             const reactor = this.reactorList.find((r) => r.uid === uid) || null;
             this.currentReactor = reactor;
-            if (reactor) {
-                this.preview = reactor.slots.map((u) => u.uid);
-                this.occupyCounters = Object.fromEntries(
-                    this.inventory.map((u) => [u.uid, 0])
-                );
-            }
-        },
-    },
-
-    computed: {
-        previewSlots() {
-            const reactor = this.currentReactor;
-            return reactor
-                ? this.preview.map(
-                      (uid: Uid, i: number) =>
-                          this.itemsMap[uid] || reactor.slots[i]
-                  )
-                : [];
+            this.reset();
         },
     },
 
@@ -163,14 +133,12 @@ export default Vue.extend<DeployerData, DeployerMethods, DeployerComputed, {}>({
         },
 
         unhold() {
-            this.holding = -1;
+            this.holdingIndex = -1;
         },
 
-        hold(uid: Uid, event: MouseEvent) {
-            if (!this.occupyCounters[uid]) {
-                this.holding = uid;
-            }
-            event.stopPropagation();
+        hold(index: number) {
+            this.holdingIndex = index;
+            // event.stopPropagation();
         },
 
         deploy() {
@@ -178,7 +146,7 @@ export default Vue.extend<DeployerData, DeployerMethods, DeployerComputed, {}>({
             if (!reactor) return;
             const result = game.deploy({
                 reactorUid: this.currentReactorUid,
-                slots: this.preview.map((uid, i) =>
+                slots: this.preview.map(s => s.uid).map((uid, i) =>
                     uid === reactor.slots[i].uid ? -1 : uid
                 ),
             });
@@ -190,42 +158,66 @@ export default Vue.extend<DeployerData, DeployerMethods, DeployerComputed, {}>({
         },
 
         mouseMoveHandler(event: MouseEvent) {
-            if (this.holding >= 0) {
+            if (this.holdingIndex >= 0) {
                 const h = (this.$refs.holding as Vue)?.$el as HTMLElement;
                 if (h) {
-                    const bounding = (this.$refs
-                        .deployer as HTMLDivElement).getBoundingClientRect();
+                    const bounding = (this.$refs.deployer as HTMLDivElement).getBoundingClientRect();
                     h.style.left = event.clientX - bounding.left - 32 + "px";
                     h.style.top = event.clientY - bounding.top - 32 + "px";
                 }
             }
         },
 
-        replace(index: number) {
-            if (!this.removal) {
-                if (this.holding >= 0) {
-                    if (this.preview[index] >= 0) {
-                        this.occupyCounters[this.preview[index]]--;
+        replace(index: number, event: MouseEvent) {
+            event.stopPropagation();
+            let old = null;
+            const newPreview = this.preview.slice();
+            if (this.preview[index].protoId !== 'empty') {
+                old = this.preview[index];
+                if (this.holdingIndex < 0 && this.currentReactor) {
+                    const prev = this.currentReactor.slots[index];
+                    if (prev.protoId === 'empty') {
+                        newPreview[index] = prev;
+                    } else {
+                        newPreview[index] = {
+                            uid: 0,
+                            protoId: 'empty',
+                            heat: 0,
+                            mass: 0,
+                            duration: 1,
+                        };
                     }
-                    this.preview = this.preview.slice();
-                    this.preview[index] = this.holding;
-                    this.occupyCounters[this.holding]++;
-                    this.holding = -1;
                 }
-            } else {
-                if (this.preview[index] >= 0) {
-                    this.occupyCounters[this.preview[index]]--;
-                }
-                this.preview = this.preview.slice();
-                this.preview[index] = -1;
             }
+            if (this.holdingIndex >= 0) {
+                newPreview[index] = this.inventory[this.holdingIndex];
+                if (old) {
+                    this.inventory.splice(this.holdingIndex, 1, old);
+                } else {
+                    this.inventory.splice(this.holdingIndex, 1);
+                }
+            } else if (old) {
+                this.inventory.push(old);
+            }
+            this.preview = newPreview;
+            this.holdingIndex = -1;
+        },
+
+        reset() {
+            this.inventory = this.initiateInventory.slice();
+            if (this.currentReactor) {
+                this.preview = this.currentReactor.slots.slice();
+            } else {
+                this.preview = [];
+            }
+            this.holdingIndex = -1;
         },
     },
 
     created() {
         this.reactorList = game.getReactorList();
-        this.inventory = game.getInventory();
-        this.itemsMap = makeUidMap(this.inventory);
+        this.initiateInventory = game.getInventory();
+        this.reset();
     },
 });
 </script>

@@ -16,9 +16,14 @@ function iconOf(id: string) {
     return Res.get('icon', id);
 }
 
+function imgOf(id: string) {
+    return Res.get('img', id);
+}
+
 export {
     textOf,
     nameOf,
     descOf,
     iconOf,
+    imgOf,
 }

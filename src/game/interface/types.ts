@@ -25,6 +25,10 @@ interface Jsonfible<TObject, TData> {
     toJson(obj?: TObject): TData;
 }
 
+interface Img {
+    src?: string;
+}
+
 export {
     Uid,
     Id,
@@ -34,4 +38,5 @@ export {
     Tickable,
     Unique,
     Jsonfible,
+    Img,
 }

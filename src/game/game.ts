@@ -57,6 +57,14 @@ function initializeData(): DataType {
                     mass: 5e3,
                 },
             },
+            {
+                uid: genUid(),
+                price: 2000,
+                params: { 
+                    protoId: 'cold_block',
+                    mass: 5e3,
+                },
+            },
         ],
         period: 1000,
         lastModified: Date.now(),
@@ -209,9 +217,16 @@ const localGameInterface: ServerInterface = {
         // Execute transition
         for (let index = 0; index < scheme.slots.length; index++) {
             const uid = scheme.slots[index];
-            if (uid >= 0) {
-                data.inventory.push(reactor.slots[index]);
-                reactor.slots[index] = units[uid];
+            const old = reactor.slots[index];
+            if (old.protoId !== 'empty' && old.uid !== 0) {
+                data.inventory.push(old);
+            }
+            if (uid > 0) {
+                const unit = units[uid];
+                unit.heat += old?.heat || 0;
+                reactor.slots[index] = unit;
+            } else {
+                reactor.slots[index] = UnitFactory.create({ protoId: 'empty' }, true);
             }
         }
         return { success: true };

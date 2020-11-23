@@ -1,10 +1,10 @@
 <template>
-    <div class="reactor-layout" ref="layout">
+    <div class="reactor-layout" ref="layout" :style="reactorBg">
         <div 
             v-for="(pos, index) of layout.slots" 
             :key="index" 
             class="slot"
-            :style="`left:${(pos.x) * actualCellWidth}px;top:${(pos.y) * actualCellWidth}px`"
+            :style="styleAt(index)"
         >
             <img
                 :width="actualCellWidth"
@@ -19,8 +19,8 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { iconOf } from "@/utils/resources";
-import { UnitData } from '@/game/interface/common-interfaces';
+import { iconOf, imgOf } from "@/utils/resources";
+import { Layout, UnitData } from '@/game/interface/common-interfaces';
 
 export default Vue.extend({
     props: {
@@ -38,9 +38,39 @@ export default Vue.extend({
         };
     },
 
+    computed: {
+        reactorBg() {
+            if (this.layout.src) {
+                return [
+                    `background-image: url('${imgOf(this.layout.src)}')`,
+                    'background-clip: padding-box',
+                    'background-origin: border-box',
+                    'background-repeat: no-repeat',
+                    'background-size: cover'
+                ].join(';');
+            } else {
+                return '';
+            }
+        },
+    },
+
     methods: {
         iconAt(index: number) {
             return iconOf((this.slots[index] as UnitData)?.protoId || "empty");
+        },
+
+        styleAt(index: number) {
+            const slot = (this.layout as Layout).slots[index];
+            const unit = this.slots[index];
+            return [
+                `left: ${slot.x * this.actualCellWidth}px`,
+                `top: ${slot.y * this.actualCellWidth}px`,
+                `background-image: url('${imgOf(slot.src || 'slot')}')`,
+                'background-clip: padding-box',
+                'background-origin: border-box',
+                'background-repeat: no-repeat',
+                'background-size: cover'
+            ].join(';');
         },
 
         resize() {

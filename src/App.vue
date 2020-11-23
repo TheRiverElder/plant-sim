@@ -1,6 +1,6 @@
 <template>
     <v-app id="app" class="fill-y">
-        <v-app-bar 
+        <!-- <v-app-bar 
             app 
             dark 
             color="primary" 
@@ -15,7 +15,7 @@
             />
 
             <Terminal class="flex-grow-1"/>
-        </v-app-bar>
+        </v-app-bar> -->
 
         <v-main class="fill-y overflow-hideen pd-10">
             <router-view class="fill-y overflow-auto" />
@@ -37,12 +37,12 @@
 
 <script lang="ts">
 import Vue from 'vue';
-import Terminal from '@/components/Terminal.vue';
+// import Terminal from '@/components/Terminal.vue';
 import { routes } from '@/router'
 
 export default Vue.extend({
     components: {
-        Terminal,
+        // Terminal,
     },
 
     data() {

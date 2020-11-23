@@ -8,6 +8,7 @@ import ReactorFactory from '../ReactorFactory';
 import MatrixReactor from './reactor/MatrixReactor';
 import CoilReactor from './reactor/CoilReactor';
 import NeuclearRod from './unit-proto/NeuclearRod';
+import ColdBlock from './unit-proto/ColdBlock';
 
 export default function initialize () {
   UnitFactory.register(new Empty());
@@ -28,6 +29,9 @@ export default function initialize () {
     halfLife: 100,
     heatRatio: 1e6,
     initialAbundance: 0.05,
+  }));
+  UnitFactory.register(new ColdBlock({
+    halfLife: 0.5,
   }));
 
   ReactorFactory.register(new MatrixReactor());

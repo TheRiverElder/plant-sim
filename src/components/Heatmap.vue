@@ -43,16 +43,16 @@ export default Vue.extend({
 
     methods: {
         paint() {
-            const canvas = this.$refs.canvas as HTMLCanvasElement;
-            if (canvas) {
-                paintHeatmap(
-                    this.heatmap as number[][],
-                    canvas,
-                    this.actualCellWidth,
-                    this.maxValue,
-                    this.grid,
-                );
-            }
+            // const canvas = this.$refs.canvas as HTMLCanvasElement;
+            // if (canvas) {
+            //     paintHeatmap(
+            //         this.heatmap as number[][],
+            //         canvas,
+            //         this.actualCellWidth,
+            //         this.maxValue,
+            //         this.grid,
+            //     );
+            // }
         },
 
         update() {

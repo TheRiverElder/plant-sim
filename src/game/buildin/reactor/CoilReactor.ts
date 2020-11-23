@@ -48,6 +48,7 @@ export default class CoilReactor implements ReactorProto {
                         y: 3.5 + 2 * Math.sin(angle),
                     };
                 }).concat([{ x: 4.5, y: 3.5 }]),
+                src: 'coil_reactor_bg',
             },
             slots: reactor.slots,
             heatmap: [[]],
